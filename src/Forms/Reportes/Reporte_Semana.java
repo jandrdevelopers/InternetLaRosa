@@ -17,12 +17,15 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
+import org.joda.time.DateTimeConstants;
 
 /**
  *
@@ -54,8 +57,9 @@ public class Reporte_Semana extends javax.swing.JPanel {
         Date date1 = null;
         Date date2 = null;
         try {
-            date2 = new SimpleDateFormat("yyyy-MM-dd").parse(Strings.getStringDate());
-            date1 = new SimpleDateFormat("yyyy-MM-dd").parse(Strings.getStringDate6DiasAntes());
+            LocalDate ld = LocalDate.now();
+            date2 = new SimpleDateFormat("yyyy-MM-dd").parse(ld.with(DayOfWeek.SUNDAY).toString());
+            date1 = new SimpleDateFormat("yyyy-MM-dd").parse(ld.with(DayOfWeek.MONDAY).toString());
         } catch (ParseException ex) {
             Logger.getLogger(Reporte_Dia.class.getName()).log(Level.SEVERE, null, ex);
         }

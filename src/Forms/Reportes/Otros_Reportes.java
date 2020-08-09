@@ -6,6 +6,7 @@
 package Forms.Reportes;
 
 import Clases.CRUD;
+import Clases.Categoria;
 import Clases.Colores;
 import Clases.Producto;
 import Clases.Strings;
@@ -30,6 +31,7 @@ public class Otros_Reportes extends javax.swing.JPanel {
     ArrayList<Producto> productos = new ArrayList<Producto>();
     String col[] = {"Producto", "existencia", "Precio venta", "Proveedor", "Categoria"};
     DefaultTableModel tableModel = new DefaultTableModel(col, 0);
+    ArrayList<Categoria> categorias;
     
     /**
      * Creates new form Otros_Reportes
@@ -39,10 +41,16 @@ public class Otros_Reportes extends javax.swing.JPanel {
         diseñar_form();
     }
     
+     public void mostrar_loading(boolean mostrar) {
+        tblProductos.setVisible(!mostrar);
+        lblLoader.setVisible(mostrar);
+    }
+     
     private void diseñar_form() {
        this.setBackground(Colores.texto_botones_clicked);
        pnlContenedor.setBackground(Colores.fondo_primario);
-       new consultar_productos().show();
+       lblLoader.setVisible(false);
+       new consultar_categoria().show();
     }
 
     /**
@@ -58,6 +66,8 @@ public class Otros_Reportes extends javax.swing.JPanel {
         jScrollPane2 = new javax.swing.JScrollPane();
         tblProductos = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
+        cmbCategoria = new javax.swing.JComboBox<>();
+        lblLoader = new javax.swing.JLabel();
 
         tblProductos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -73,7 +83,23 @@ public class Otros_Reportes extends javax.swing.JPanel {
         jScrollPane2.setViewportView(tblProductos);
 
         jLabel1.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
-        jLabel1.setText("Inventario al día de hoy por la mañana:");
+        jLabel1.setText("Inventario por categorias:");
+
+        cmbCategoria.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        cmbCategoria.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbCategoria.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbCategoriaItemStateChanged(evt);
+            }
+        });
+        cmbCategoria.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                cmbCategoriaPropertyChange(evt);
+            }
+        });
+
+        lblLoader.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblLoader.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/loader.gif"))); // NOI18N
 
         javax.swing.GroupLayout pnlContenedorLayout = new javax.swing.GroupLayout(pnlContenedor);
         pnlContenedor.setLayout(pnlContenedorLayout);
@@ -82,6 +108,8 @@ public class Otros_Reportes extends javax.swing.JPanel {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlContenedorLayout.createSequentialGroup()
                 .addGap(30, 30, 30)
                 .addGroup(pnlContenedorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblLoader, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmbCategoria, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(30, 30, 30))
@@ -91,9 +119,13 @@ public class Otros_Reportes extends javax.swing.JPanel {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlContenedorLayout.createSequentialGroup()
                 .addGap(30, 30, 30)
                 .addComponent(jLabel1)
-                .addGap(20, 20, 20)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE)
-                .addGap(29, 29, 29))
+                .addGap(30, 30, 30)
+                .addComponent(cmbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(lblLoader, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -110,6 +142,43 @@ public class Otros_Reportes extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void cmbCategoriaPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_cmbCategoriaPropertyChange
+        
+    }//GEN-LAST:event_cmbCategoriaPropertyChange
+
+    private void cmbCategoriaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbCategoriaItemStateChanged
+        new consultar_productos().show();
+    }//GEN-LAST:event_cmbCategoriaItemStateChanged
+
+    public class consultar_categoria implements Runnable {
+
+        public void show() {
+            new Thread(this).start();
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (CRUD.conexion_internet()) {
+                    mostrar_loading(true);
+                    categorias = CRUD.consultar_categorias();
+                    cmbCategoria.removeAllItems();
+                    for (Categoria campos : categorias) {
+                        cmbCategoria.addItem(campos.getNombreCategoria());
+                    }
+                    cmbCategoria.setSelectedIndex(0);
+                    new consultar_productos().show();
+                } else {
+                    mostrar_loading(false);
+                    Vista.mensaje_error(Strings.sin_internet, Strings.titulo_sin_internet);
+                }
+            } catch (InterruptedException | IOException | SQLException | ClassNotFoundException ex) {
+                    mostrar_loading(false);
+                Logger.getLogger(Eliminar_Categoria.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
 public class consultar_productos implements Runnable {
 
         public void show() {
@@ -120,8 +189,9 @@ public class consultar_productos implements Runnable {
         public void run() {
             try {
                 if (CRUD.conexion_internet()) {
+                    mostrar_loading(true);
                     productos.clear();
-                    productos = CRUD.consultar_productos(-500, "existencia, nombreProducto");
+                    productos = CRUD.consultar_productos_categoria(-500, "existencia, nombreProducto", categorias.get(cmbCategoria.getSelectedIndex()).getIdCategoria());
                     tableModel.getDataVector().removeAllElements();
                     revalidate();
                     for (int i = 0; i < productos.size(); i++) {
@@ -134,18 +204,23 @@ public class consultar_productos implements Runnable {
                         tableModel.addRow(data);
                     }
                     tblProductos.setModel(tableModel);
+                    mostrar_loading(false); 
                 } else {
+                    mostrar_loading(false);
                     Vista.mensaje_error(Strings.sin_internet, Strings.titulo_sin_internet);
                 }
             } catch (InterruptedException | IOException | SQLException | ClassNotFoundException ex) {
+                mostrar_loading(false);
                 Logger.getLogger(Eliminar_Categoria.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> cmbCategoria;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblLoader;
     private javax.swing.JPanel pnlContenedor;
     private javax.swing.JTable tblProductos;
     // End of variables declaration//GEN-END:variables

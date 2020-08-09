@@ -232,6 +232,40 @@ public class CRUD {
         }
     }
 
+    public static ArrayList<Producto> consultar_productos_categoria(int exi, String order, int categoria) throws SQLException, ClassNotFoundException {
+        ArrayList<Producto> productos = new ArrayList<>();
+        try {
+            BD bd = new BD();
+            System.out.println("SELECT * FROM PPC WHERE existencia >=" + exi + " AND categoria=" + categoria + " ORDER BY " + order +"");
+            PreparedStatement query = bd.getConnection().prepareStatement("SELECT * FROM PPC WHERE existencia >=" + exi + " AND categoria=" + categoria + " ORDER BY " + order +"");
+            ResultSet result = query.executeQuery();
+            while (result.next()) {
+                int idProveedor = result.getInt("idProveedor");
+                String nombreProveedor = result.getString("nombreProveedor");
+                String direccion = result.getString("direccion");
+                String rfc = result.getString("rfc");
+                Proveedor pro = new Proveedor(idProveedor, nombreProveedor, direccion, rfc);
+                int id_categoria = result.getInt("idCategoria");
+                String nombreCategoria = result.getString("nombreCategoria");
+                String descripcionC = result.getString("descripcionC");
+                int porcentaje = 0;
+                Categoria cat = new Categoria(id_categoria, nombreCategoria, descripcionC, porcentaje);
+                int idProducto = result.getInt("idProducto");
+                String nombreProducto = result.getString("nombreProducto");
+                String descripcion = result.getString("descripcion");
+                double precioVenta = result.getDouble("precioVenta");
+                int existencia = result.getInt("existencia");
+                Producto produc = new Producto(idProducto, nombreProducto, descripcion, precioVenta, existencia, pro, cat);
+                productos.add(produc);
+            }
+            bd.close();
+            return productos;
+        } catch (SQLException ex) {                    
+            System.out.println("SELECT * FROM PPC WHERE existencia >=" + exi + " AND categoria=" + categoria + " ORDER BY " + order +"");
+            throw new SQLException(ex);
+        }
+    }
+    
     public static ArrayList<Producto> consultar_productos(int exi, String order) throws SQLException, ClassNotFoundException {
         ArrayList<Producto> productos = new ArrayList<>();
         try {
